@@ -1,27 +1,35 @@
-import React, { useMemo } from "react";
 import { CrudFilter, useList } from "@refinedev/core";
 import dayjs from "dayjs";
-import Stats from "../../components/dashboard/Stats";
+import React, { useEffect, useMemo, useState } from "react";
+
+import DateRangeDropdown from "../../components/dashboard/DateRangeDropDown";
+import DropdownWithCheckbox from "../../components/dashboard/DropdownWithCheckbox";
+import { RecentSales } from "../../components/dashboard/RecentSales";
 import { ResponsiveAreaChart } from "../../components/dashboard/ResponsiveAreaChart";
 import { ResponsiveBarChart } from "../../components/dashboard/ResponsiveBarChart";
+import Stats from "../../components/dashboard/Stats";
 import { TabView } from "../../components/dashboard/TabView";
-import { RecentSales } from "../../components/dashboard/RecentSales";
 import { IChartDatum, TTab } from "../../interfaces";
 
-const filters: CrudFilter[] = [
+export const Dashboard: React.FC = () => {
+  const [startDate, setStartDate] = useState(dayjs()?.subtract(7, "days")?.startOf("day"));
+  const [endDate, setEndDate] = useState(dayjs().startOf("day"));
+  const [activeTab, setActiveTab] = useState(0);
+  const [comparisonData , setComparisonData ] = useState([]);
+  const [comparisonDataGraph, setComparisonDataGraph ]= useState<any>([]);
+
+  const filters: CrudFilter[] = [
   {
     field: "start",
     operator: "eq",
-    value: dayjs()?.subtract(7, "days")?.startOf("day"),
+    value: startDate,
   },
   {
     field: "end",
     operator: "eq",
-    value: dayjs().startOf("day"),
+    value: endDate,
   },
 ];
-
-export const Dashboard: React.FC = () => {
   const { data: dailyRevenue } = useList<IChartDatum>({
     resource: "dailyRevenue",
     filters,
@@ -54,42 +62,20 @@ export const Dashboard: React.FC = () => {
   const memoizedOrdersData = useMemoizedChartData(dailyOrders);
   const memoizedNewCustomersData = useMemoizedChartData(newCustomers);
 
+ const displayData = {
+   dailyRevenue : memoizedRevenueData,
+   dailyOrders: memoizedOrdersData,
+   newCustomers: memoizedNewCustomersData
+ }
   const tabs: TTab[] = [
     {
       id: 1,
-      label: "Daily Revenue",
+      label: "Daily Revenue/New Customers/Daily Orders",
       content: (
         <ResponsiveAreaChart
-          kpi="Daily revenue"
-          data={memoizedRevenueData}
-          colors={{
-            stroke: "rgb(54, 162, 235)",
-            fill: "rgba(54, 162, 235, 0.2)",
-          }}
-        />
-      ),
-    },
-    {
-      id: 2,
-      label: "Daily Orders",
-      content: (
-        <ResponsiveBarChart
-          kpi="Daily orders"
-          data={memoizedOrdersData}
-          colors={{
-            stroke: "rgb(255, 159, 64)",
-            fill: "rgba(255, 159, 64, 0.7)",
-          }}
-        />
-      ),
-    },
-    {
-      id: 3,
-      label: "New Customers",
-      content: (
-        <ResponsiveAreaChart
-          kpi="New customers"
-          data={memoizedNewCustomersData}
+          kpi="Comparison"
+          data={{column: comparisonData[0], data:displayData[comparisonData[0]] }}
+          data1={{column: comparisonData[1], data:displayData[comparisonData[1]] }}
           colors={{
             stroke: "rgb(76, 175, 80)",
             fill: "rgba(54, 162, 235, 0.2)",
@@ -106,7 +92,14 @@ export const Dashboard: React.FC = () => {
         dailyOrders={dailyOrders}
         newCustomers={newCustomers}
       />
-      <TabView tabs={tabs} />
+    <div 
+      className="relative inline-block" 
+      style={{ float: 'right', marginRight: '2rem', zIndex: 1, marginTop: '1rem', display: 'flex' }}
+    >
+      <DropdownWithCheckbox setComparisonData={setComparisonData}/>
+      <DateRangeDropdown setStartDate={setStartDate} setEndDate={setEndDate}/>
+    </div>
+      <TabView tabs={tabs} setActive={setActiveTab}/>
       <RecentSales />
     </>
   );

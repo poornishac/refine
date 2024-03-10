@@ -1,13 +1,18 @@
+import dayjs from "dayjs";
 import React, { useState } from "react";
-import { TabItem } from "./TabItem";
-import { TabPanel } from "./TabPanel";
+
 import { TTab } from "../../interfaces";
+import DateRangeDropdown from "./DateRangeDropDown";
+import DropdownWithCheckbox from "./DropdownWithCheckbox";
+import { TabItem } from "./TabItem";
+import { TabPanel } from "./TabPanel"
 
 type TTabViewProps = {
   tabs: TTab[];
+  setActive: Function;
 };
 
-export const TabView = ({ tabs }: TTabViewProps) => {
+export const TabView = ({ tabs, setActive }: TTabViewProps) => {
   const [activeTab, setActiveTab] = useState(0);
   return (
     <div className="mx-auto py-4 bg-slate-50 border rounded-lg drop-shadow-md">
@@ -17,7 +22,10 @@ export const TabView = ({ tabs }: TTabViewProps) => {
             key={tab?.id}
             label={tab?.label}
             isActive={index === activeTab}
-            clickHandler={() => setActiveTab(index)}
+            clickHandler={() => {
+              setActive(index);
+              setActiveTab(index);
+            }}
           />
         ))}
       </div>
